@@ -5,7 +5,6 @@ import { DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTG
 import { reportInfo, reportError } from "./reporter";
 import { createScheduledImport, startScheduledImport } from "./schedule";
 
-
 const pool = new Pool({
   user: POSTGRES_USER,
   host: POSTGRES_HOST,
@@ -14,8 +13,6 @@ const pool = new Pool({
   port: POSTGRES_PORT,
   ssl: true
 })
-
-
 
 const checkLastCronScheduledPartition = () => {
   pool.query("SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10", (err, res) => {
