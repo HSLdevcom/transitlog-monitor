@@ -29,10 +29,11 @@ const checkLastCronScheduledPartition = () => {
   })
 }
 
-createScheduledImport("checkTilesAge", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
+createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   checkLastCronScheduledPartition()
   return;
 });
+
 export const server = () => {
   const app = express();
 
@@ -42,4 +43,6 @@ export const server = () => {
     console.log(`Server is listening on port 9000`);
   });
 };
+
+startScheduledImport("checkPartition");
 server();
