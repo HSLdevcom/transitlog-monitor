@@ -28,6 +28,7 @@ const checkLastCronScheduledPartition = () => {
 
 createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   checkLastCronScheduledPartition()
+  onComplete();
   return;
 });
 
