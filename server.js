@@ -21,11 +21,13 @@ const checkLastCronScheduledPartition = () => {
     if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
       reportInfo(`Partition maintenance successfully ended at ${partmanMaintenanceRow.end_time} `)
     } else {
-      reportError(`Partition maintenance failed.`)
+      const returnMessage = partmanMaintenanceRow.return_message;
+      const message = `Partition maintenance failed. Return message:\n
+      \`\`\`${returnMessage}\`\`\``;
+      reportError(message)
     }
   })
 }
-
 createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   checkLastCronScheduledPartition()
   onComplete();
@@ -41,6 +43,5 @@ export const server = () => {
     console.log(`Server is listening on port 9000`);
   });
 };
-
 startScheduledImport("checkPartition");
 server();
