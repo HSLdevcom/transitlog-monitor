@@ -30,7 +30,7 @@ const secretsEnv = mapValues(process.env, (value, key) => {
   return value;
 });
 
-export const SLACK_WEBHOOK_URL = secretsEnv.SLACK_WEBHOOK_URL || "";
+export const MONITOR_SLACK_WEBHOOK_URL = secretsEnv.MONITOR_SLACK_WEBHOOK_URL || "";
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || "";
 export const DAILY_TASK_SCHEDULE = secretsEnv.DAILY_TASK_SCHEDULE || "0 0 5 * * *";
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || "unknown";

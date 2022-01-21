@@ -1,4 +1,4 @@
-import { SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants";
+import { MONITOR_SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants";
 import fetch from "node-fetch";
 import _ from "lodash";
 export const messageTypes = {
@@ -39,5 +39,5 @@ export async function onMonitorEvent(
     type: "mrkdwn",
     text: fullMessage,
   };
-  return fetch(SLACK_WEBHOOK_URL, { method: "POST", body: JSON.stringify(body) });
+  return fetch(MONITOR_SLACK_WEBHOOK_URL, { method: "POST", body: JSON.stringify(body) });
 }
