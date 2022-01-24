@@ -23,7 +23,7 @@ const checkLastCronScheduledPartition = () => {
     } else {
       const returnMessage = partmanMaintenanceRow.return_message;
       const message = `Partition maintenance failed. Return message:\n
-      \`\`\`${returnMessage}\`\`\``;
+      ${returnMessage}`;
       reportError(message)
     }
   })
