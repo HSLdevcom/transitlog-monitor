@@ -43,5 +43,7 @@ export const server = () => {
     console.log(`Server is listening on port 9000`);
   });
 };
+
+checkLastCronScheduledPartition();
 startScheduledImport("checkPartition");
 server();
