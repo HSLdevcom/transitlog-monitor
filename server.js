@@ -22,7 +22,7 @@ const checkLastCronScheduledPartition = () => {
     if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
       reportInfo(`Partition maintenance successfully ended at ${partmanMaintenanceRow.end_time} `)
     } else {
-      const returnMessage = partmanMaintenanceRow.return_message;
+      const returnMessage = partmanMaintenanceRow.return_message ? partmanMaintenanceRow.return_message : 'No message.';
       const message = `Partition maintenance failed. Return message:\n
       ${returnMessage}`;
       reportError(message)

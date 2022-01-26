@@ -40,5 +40,5 @@ export async function onMonitorEvent(
     text: fullMessage,
   };
   console.log(body)
-  // return fetch(MONITOR_SLACK_WEBHOOK_URL, { method: "POST", body: JSON.stringify(body) });
+  return fetch(MONITOR_SLACK_WEBHOOK_URL, { method: "POST", body: JSON.stringify(body) });
 }
