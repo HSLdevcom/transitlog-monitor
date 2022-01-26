@@ -15,7 +15,6 @@ const pool = new Pool({
 })
 
 const checkLastCronScheduledPartition = () => {
-  console.log(DAILY_TASK_SCHEDULE);
   pool.query("SELECT * FROM cron.job_run_details ORDER BY start_time DESC", (err, res) => {
     const partmanMaintenanceRowIndex = findIndex(res.rows, (row) => { return row.command.includes('partman.run_maintenance'); })
     const partmanMaintenanceRow = res.rows[partmanMaintenanceRowIndex];
@@ -44,6 +43,5 @@ export const server = () => {
     console.log(`Server is listening on port 9000`);
   });
 };
-checkLastCronScheduledPartition();
 startScheduledImport("checkPartition");
 server();
