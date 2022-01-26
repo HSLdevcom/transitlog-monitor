@@ -15,7 +15,7 @@ const pool = new Pool({
 })
 
 const checkLastCronScheduledPartition = () => {
-  pool.query("SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10", (err, res) => {
+  pool.query("SELECT * FROM cron.job_run_details ORDER BY start_time DESC", (err, res) => {
     const partmanMaintenanceRowIndex = findIndex(res.rows, (row) => { return row.command.includes('partman.run_maintenance'); })
     const partmanMaintenanceRow = res.rows[partmanMaintenanceRowIndex];
     if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
@@ -29,7 +29,7 @@ const checkLastCronScheduledPartition = () => {
   })
 }
 createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
-  checkLastCronScheduledPartition()
+  checkLastCronScheduledPartition();
   onComplete();
   return;
 });
