@@ -39,11 +39,12 @@ const checkLastCronScheduledPartition = () => {
 
 createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (onComplete = () => {}) => {
   const environment = process.env.ENVIRONMENT;
-  const imageName = 'hsldevcom/transitlog-hfp-split-sink';
   const serviceName = `transitlog-sink-${environment}_transitlog_hfp_split_sink`;
   console.log('serviceName', serviceName)
   exec(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' ${serviceName}`, (error, stdout, stderr) => {
+    console.log(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}`)
     const startedAt = stdout.trim();
+    console.log(startedAt);
     const diff = Date.now() - Date.parse(startedAt);
     const diffInMinutes = diff / 60000;
     let errorMessage = null;
