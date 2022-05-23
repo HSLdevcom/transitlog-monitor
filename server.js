@@ -1,7 +1,8 @@
 import express from "express";
 import {Pool} from 'pg';
 import { findIndex } from "lodash";
-import { DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
+import { exec } from "child_process";
+import { DAILY_TASK_SCHEDULE, EVERY_MINUTE_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
 import { reportInfo, reportError } from "./reporter";
 import { createScheduledImport, startScheduledImport } from "./schedule";
 
@@ -35,6 +36,45 @@ const checkLastCronScheduledPartition = () => {
     }
   })
 }
+
+createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (onComplete = () => {}) => {
+  const environment = process.env.ENVIRONMENT;
+  const imageName = 'hsldevcom/transitlog-hfp-split-sink';
+  let imageTag = '';
+  switch(environment) {
+    case 'dev':
+      imageTag = ':develop'
+      break;
+    case 'prod':
+      imageTag = ':1'
+      break;
+    default:
+      imageTag = ''
+  }
+  console.log(`testing: ${imageName}${imageTag}`)
+  exec(`docker ps -q  --filter ancestor=${imageName}${imageTag}`, (error, stdout, stderr) => {
+    exec(`docker inspect -f '{{ .State.StartedAt }}' ${stdout}`, (error, stdout, stderr) => {
+      const startedAt = stdout.trim();
+      const diff = Date.now() - Date.parse(startedAt);
+      const diffInMinutes = diff / 60000;
+      let errorMessage = null;
+      if (diffInMinutes < 3) {
+        errorMessage = `${imageName}${imageTag} low uptime. Currently up for ${diffInMinutes} minutes.`
+      }
+      if (!diffInMinutes) {
+        errorMessage = `${imageName}${imageTag} is down.`
+      }
+      console.log("diff: " + diffInMinutes)
+      if (errorMessage) {
+        console.log(errorMessage)
+        // reportError(errorMessage);
+      }
+    });
+  });
+  onComplete();
+  return;
+});
+
 createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   checkLastCronScheduledPartition();
   onComplete();
@@ -50,5 +90,6 @@ export const server = () => {
     console.log(`Server is listening on port 9000`);
   });
 };
+startScheduledImport("checkHfpSplitSink");
 startScheduledImport("checkPartition");
 server();

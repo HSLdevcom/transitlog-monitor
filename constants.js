@@ -33,6 +33,7 @@ const secretsEnv = mapValues(process.env, (value, key) => {
 export const MONITOR_SLACK_WEBHOOK_URL = secretsEnv.MONITOR_SLACK_WEBHOOK_URL || "";
 export const SLACK_MONITOR_MENTION = secretsEnv.SLACK_MONITOR_MENTION || "";
 export const DAILY_TASK_SCHEDULE = secretsEnv.DAILY_TASK_SCHEDULE || "0 0 12 * * *";
+export const EVERY_MINUTE_TASK_SCHEDULE = secretsEnv.EVERY_MINUTE_TASK_SCHEDULE || "1 * * * * *";
 export const ENVIRONMENT = secretsEnv.ENVIRONMENT || "unknown";
 
 export const POSTGRES_HOST = secretsEnv.POSTGRES_HOST || "";
