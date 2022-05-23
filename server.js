@@ -41,11 +41,12 @@ createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (on
   const environment = process.env.ENVIRONMENT;
   const serviceName = `transitlog-sink-${environment}_transitlog_hfp_split_sink`;
   console.log('serviceName', serviceName)
-  exec(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' ${serviceName}`, (error, stdout, stderr) => {
-    console.log(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}`)
+  exec(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' transitlog-sink-dev_transitlog_hfp_split_sink`, (error, stdout, stderr) => {
+    console.log(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' ${serviceName}`)
     const startedAt = stdout.trim();
+    console.log(error);
     console.log(stdout);
-    console.log(startedAt);
+    console.log(stderr)
     const diff = Date.now() - Date.parse(startedAt);
     const diffInMinutes = diff / 60000;
     let errorMessage = null;
