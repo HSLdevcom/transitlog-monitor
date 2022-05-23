@@ -44,6 +44,7 @@ createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (on
   exec(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' ${serviceName}`, (error, stdout, stderr) => {
     console.log(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}`)
     const startedAt = stdout.trim();
+    console.log(stdout);
     console.log(startedAt);
     const diff = Date.now() - Date.parse(startedAt);
     const diffInMinutes = diff / 60000;
