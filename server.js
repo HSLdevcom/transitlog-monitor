@@ -48,10 +48,10 @@ createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (on
     const diffInMinutes = diff / 60000;
     let errorMessage = null;
     if (diffInMinutes < 3) {
-      errorMessage = `${imageName}${imageTag} low uptime. Currently up for ${diffInMinutes} minutes.`
+      errorMessage = `${serviceName} low uptime. Currently up for ${diffInMinutes} minutes.`
     }
     if (!diffInMinutes) {
-      errorMessage = `${imageName}${imageTag} is down.`
+      errorMessage = `${serviceName} is down.`
     }
     console.log("diff: " + diffInMinutes)
     if (errorMessage) {
