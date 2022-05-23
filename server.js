@@ -40,36 +40,24 @@ const checkLastCronScheduledPartition = () => {
 createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (onComplete = () => {}) => {
   const environment = process.env.ENVIRONMENT;
   const imageName = 'hsldevcom/transitlog-hfp-split-sink';
-  let imageTag = '';
-  switch(environment) {
-    case 'dev':
-      imageTag = ':develop'
-      break;
-    case 'prod':
-      imageTag = ':1'
-      break;
-    default:
-      imageTag = ''
-  }
-  console.log(`testing: ${imageName}${imageTag}`)
-  exec(`docker ps -q  --filter ancestor=${imageName}${imageTag}`, (error, stdout, stderr) => {
-    exec(`docker inspect -f '{{ .State.StartedAt }}' ${stdout}`, (error, stdout, stderr) => {
-      const startedAt = stdout.trim();
-      const diff = Date.now() - Date.parse(startedAt);
-      const diffInMinutes = diff / 60000;
-      let errorMessage = null;
-      if (diffInMinutes < 3) {
-        errorMessage = `${imageName}${imageTag} low uptime. Currently up for ${diffInMinutes} minutes.`
-      }
-      if (!diffInMinutes) {
-        errorMessage = `${imageName}${imageTag} is down.`
-      }
-      console.log("diff: " + diffInMinutes)
-      if (errorMessage) {
-        console.log(errorMessage)
-        // reportError(errorMessage);
-      }
-    });
+  const serviceName = `transitlog-sink-${environment}_transitlog_hfp_split_sink`;
+  console.log('serviceName', serviceName)
+  exec(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' ${serviceName}`, (error, stdout, stderr) => {
+    const startedAt = stdout.trim();
+    const diff = Date.now() - Date.parse(startedAt);
+    const diffInMinutes = diff / 60000;
+    let errorMessage = null;
+    if (diffInMinutes < 3) {
+      errorMessage = `${imageName}${imageTag} low uptime. Currently up for ${diffInMinutes} minutes.`
+    }
+    if (!diffInMinutes) {
+      errorMessage = `${imageName}${imageTag} is down.`
+    }
+    console.log("diff: " + diffInMinutes)
+    if (errorMessage) {
+      console.log(errorMessage)
+      // reportError(errorMessage);
+    }
   });
   onComplete();
   return;
