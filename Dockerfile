@@ -1,6 +1,7 @@
 FROM node:12-alpine
 
 ENV WORK /opt/transitlog-monitor
+VOLUME /hostpipe
 
 # Create app directory
 RUN mkdir -p ${WORK}

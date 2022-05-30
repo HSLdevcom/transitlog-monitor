@@ -1,8 +1,8 @@
 import express from "express";
 import {Pool} from 'pg';
 import { findIndex } from "lodash";
-import { exec } from "child_process";
-import { DAILY_TASK_SCHEDULE, EVERY_MINUTE_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
+import fs from 'fs';
+import { DAILY_TASK_SCHEDULE, HOURLY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
 import { reportInfo, reportError } from "./reporter";
 import { createScheduledImport, startScheduledImport } from "./schedule";
 
@@ -36,32 +36,49 @@ const checkLastCronScheduledPartition = () => {
     }
   })
 }
-
-createScheduledImport("checkHfpSplitSink", EVERY_MINUTE_TASK_SCHEDULE, async (onComplete = () => {}) => {
+createScheduledImport("checkHfpSplitSink", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   const environment = process.env.ENVIRONMENT;
   const serviceName = `transitlog-sink-${environment}_transitlog_hfp_split_sink`;
-  console.log('serviceName', serviceName)
-  exec(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' transitlog-sink-dev_transitlog_hfp_split_sink`, (error, stdout, stderr) => {
-    console.log(`docker service inspect -f '{{ .UpdateStatus.StartedAt }}' ${serviceName}`)
-    const startedAt = stdout.trim();
-    console.log(error);
-    console.log(stdout);
-    console.log(stderr)
-    const diff = Date.now() - Date.parse(startedAt);
-    const diffInMinutes = diff / 60000;
-    let errorMessage = null;
-    if (diffInMinutes < 3) {
-      errorMessage = `${serviceName} low uptime. Currently up for ${diffInMinutes} minutes.`
-    }
-    if (!diffInMinutes) {
-      errorMessage = `${serviceName} is down.`
-    }
-    console.log("diff: " + diffInMinutes)
-    if (errorMessage) {
-      console.log(errorMessage)
-      // reportError(errorMessage);
-    }
-  });
+
+  const pipePath = "/hostpipe/hostpipe"
+  const outputPath = "/hostpipe/output.txt"
+  const commandToRun = `docker service ps ${serviceName} --format {{.CurrentState}}`
+
+  if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
+  
+  const wstream = fs.createWriteStream(pipePath)
+  wstream.write(commandToRun)
+  wstream.close()
+
+  const timeout = 10000
+  const timeoutStart = Date.now()
+  const myLoop = setInterval(function () {
+      if (Date.now() - timeoutStart > timeout) {
+          clearInterval(myLoop);
+          console.log("Timed out. Could not find docker output.")
+          reportError(`${serviceName} monitoring error: Timed out. Could not find docker output.`);
+      } else {
+          if (fs.existsSync(outputPath)) {
+              clearInterval(myLoop);
+              const data = fs.readFileSync(outputPath).toString().trim();
+              if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
+              const splitByRow = data.split('ago');
+              if (!splitByRow.length) {
+                console.log("Something went wrong. No docker service data.");
+              }
+              const currentUpTime = splitByRow[0].includes('Running') ? splitByRow[0].match(/\d+/)[0] : 0;
+              const failCountWithinHour = splitByRow.reduce(
+                (accumulator, currentValue) => accumulator.concat(currentValue), []
+              ).filter(item => (item.includes('Failed') || item.includes('Shutdown')) && item.includes('minutes')).length
+              console.log(`${serviceName} failed ${failCountWithinHour} times within last hour. Currently up for ${currentUpTime} minutes.`);
+              if (failCountWithinHour > 3) {
+                const errorMessage = `${serviceName} failed ${failCountWithinHour} times within last hour. Latest instance: ${splitByRow[0]}`;
+                reportError(errorMessage);
+              }
+
+          }
+      }
+  }, 300);
   onComplete();
   return;
 });
