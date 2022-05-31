@@ -36,7 +36,7 @@ const checkLastCronScheduledPartition = () => {
     }
   })
 }
-createScheduledImport("checkHfpSplitSink", '0 * * * * *', async (onComplete = () => {}) => {
+createScheduledImport("checkHfpSplitSink", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
   const environment = process.env.ENVIRONMENT;
   const serviceName = `transitlog-sink-${environment}_transitlog_hfp_split_sink`;
 
