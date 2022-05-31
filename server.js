@@ -36,7 +36,7 @@ const checkLastCronScheduledPartition = () => {
     }
   })
 }
-createScheduledImport("checkHfpSplitSink", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
+createScheduledImport("checkHfpSplitSink", '0 * * * * *', async (onComplete = () => {}) => {
   const environment = process.env.ENVIRONMENT;
   const serviceName = `transitlog-sink-${environment}_transitlog_hfp_split_sink`;
 
@@ -52,6 +52,7 @@ createScheduledImport("checkHfpSplitSink", HOURLY_TASK_SCHEDULE, async (onComple
 
   const timeout = 10000
   const timeoutStart = Date.now()
+  console.log(serviceName);
   const myLoop = setInterval(function () {
       if (Date.now() - timeoutStart > timeout) {
           clearInterval(myLoop);
@@ -63,6 +64,7 @@ createScheduledImport("checkHfpSplitSink", HOURLY_TASK_SCHEDULE, async (onComple
               const data = fs.readFileSync(outputPath).toString().trim();
               if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
               const splitByRow = data.split('ago');
+              console.log(data);
               if (!splitByRow || !splitByRow.length) {
                 console.log("Something went wrong. No docker service data.");
               }
