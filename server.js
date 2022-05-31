@@ -63,7 +63,7 @@ createScheduledImport("checkHfpSplitSink", HOURLY_TASK_SCHEDULE, async (onComple
               const data = fs.readFileSync(outputPath).toString().trim();
               if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
               const splitByRow = data.split('ago');
-              if (!splitByRow.length) {
+              if (!splitByRow || !splitByRow.length) {
                 console.log("Something went wrong. No docker service data.");
               }
               const currentUpTime = splitByRow[0].includes('Running') ? splitByRow[0].match(/\d+/)[0] : 0;
