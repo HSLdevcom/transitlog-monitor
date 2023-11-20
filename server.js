@@ -1,7 +1,7 @@
 import express from "express";
 import {Pool} from 'pg';
 import { findIndex } from "lodash";
-import { DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
+import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
 import { reportInfo, reportError } from "./reporter";
 import { createScheduledImport, startScheduledImport } from "./schedule";
 
@@ -34,9 +34,36 @@ createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete =
   return;
 });
 
+
+const checkRecentDataInVehiclePosition = () => {
+  const now = new Date();
+  const oneHourAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() - 1, now.getUTCMinutes(), now.getUTCSeconds()));
+  const query = "SELECT COUNT(*) FROM vehicleposition WHERE tst > $1";
+
+  pool.query(query, [oneHourAgo.toISOString()], (err, res) => {
+    if (err) {
+      reportError(`Error while checking vehicleposition data: ${err.message}`);
+      return;
+    }
+
+    const count = res.rows[0].count;
+    if (count > 0) {
+      reportInfo(`Vehicle position data is up to date. Records in the last hour: ${count}`);
+    } else {
+      reportError("No new vehicle position data in the last hour.");
+    }
+  });
+};
+
+createScheduledImport("checkVehiclePositionData", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
+  checkRecentDataInVehiclePosition();
+  onComplete();
+});
+
+
+
 export const server = () => {
   const app = express();
-
   app.use(express.urlencoded({ extended: true }));
 
   app.listen(9000, () => {
@@ -44,4 +71,5 @@ export const server = () => {
   });
 };
 startScheduledImport("checkPartition");
+startScheduledImport("checkVehiclePositionData");
 server();
