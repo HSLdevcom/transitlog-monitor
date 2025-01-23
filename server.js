@@ -1,8 +1,7 @@
 import express from "express";
 import {Pool} from 'pg';
 import { findIndex } from "lodash";
-import fs from 'fs';
-import { DAILY_TASK_SCHEDULE, HOURLY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
+import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
 import { reportInfo, reportError } from "./reporter";
 import { createScheduledImport, startScheduledImport } from "./schedule";
 
@@ -16,14 +15,7 @@ const pool = new Pool({
 })
 
 const checkLastCronScheduledPartition = () => {
-  pool.query("SELECT * FROM cron.job_run_details ORDER BY start_time DESC", (err, res) => {
-    if (err) {
-      reportError(err)
-    }
-    if (!res) {
-      reportError('No response.')
-      return;
-    }
+  pool.query("SELECT * FROM cron.job_run_details ORDER BY runid DESC limit 10", (err, res) => {
     const partmanMaintenanceRowIndex = findIndex(res.rows, (row) => { return row.command.includes('partman.run_maintenance'); })
     const partmanMaintenanceRow = res.rows[partmanMaintenanceRowIndex];
     if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
@@ -91,15 +83,66 @@ createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete =
   return;
 });
 
+
+const checkVehiclepositionData = () => {
+  const now = new Date();
+  const oneHourAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() - 1, now.getUTCMinutes(), now.getUTCSeconds()));
+  const query = "SELECT COUNT(*) FROM vehicleposition WHERE tst > $1";
+
+  pool.query(query, [oneHourAgo.toISOString()], (err, res) => {
+    if (err) {
+      reportError(`Error while checking vehicleposition data: ${err.message}`);
+      return;
+    }
+
+    const count = res.rows[0].count;
+    if (count > 0) {
+      reportInfo(`Vehicle position data is up to date. Records in the last hour: ${count}`);
+    } else {
+      reportError("No new vehicle position data in the last hour.");
+    }
+  });
+};
+
+const checkApcData = () => {
+  const now = new Date();
+  const oneHourAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() - 1, now.getUTCMinutes(), now.getUTCSeconds()));
+  const query = "SELECT COUNT(*) FROM passengercount WHERE tst > $1";
+
+  pool.query(query, [oneHourAgo.toISOString()], (err, res) => {
+    if (err) {
+      reportError(`Error while checking passengercount data: ${err.message}`);
+      return;
+    }
+
+    const count = res.rows[0].count;
+    if (count > 0) {
+      reportInfo(`Passengercount data is up to date. Records in the last hour: ${count}`);
+    } else {
+      reportError("No new passengercount data in the last hour.");
+    }
+  });
+};
+
+createScheduledImport("checkVehiclePositionData", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
+  checkVehiclepositionData();
+  onComplete();
+});
+
+createScheduledImport("checkApcData", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
+  checkApcData();
+  onComplete();
+});
+
 export const server = () => {
   const app = express();
-
   app.use(express.urlencoded({ extended: true }));
 
   app.listen(9000, () => {
     console.log(`Server is listening on port 9000`);
   });
 };
-startScheduledImport("checkHfpSplitSink");
 startScheduledImport("checkPartition");
+startScheduledImport("checkVehiclePositionData");
+startScheduledImport("checkApcData");
 server();
