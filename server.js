@@ -15,7 +15,7 @@ const pool = new Pool({
 })
 
 const checkLastCronScheduledPartition = () => {
-  pool.query("SELECT * FROM cron.job_run_details ORDER BY start_time DESC", (err, res) => {
+  pool.query("SELECT * FROM cron.job_run_details ORDER BY runid DESC limit 10", (err, res) => {
     const partmanMaintenanceRowIndex = findIndex(res.rows, (row) => { return row.command.includes('partman.run_maintenance'); })
     const partmanMaintenanceRow = res.rows[partmanMaintenanceRowIndex];
     if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
@@ -35,7 +35,7 @@ createScheduledImport("checkPartition", DAILY_TASK_SCHEDULE, async (onComplete =
 });
 
 
-const checkRecentDataInVehiclePosition = () => {
+const checkVehiclepositionData = () => {
   const now = new Date();
   const oneHourAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() - 1, now.getUTCMinutes(), now.getUTCSeconds()));
   const query = "SELECT COUNT(*) FROM vehicleposition WHERE tst > $1";
@@ -55,12 +55,35 @@ const checkRecentDataInVehiclePosition = () => {
   });
 };
 
+const checkApcData = () => {
+  const now = new Date();
+  const oneHourAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() - 1, now.getUTCMinutes(), now.getUTCSeconds()));
+  const query = "SELECT COUNT(*) FROM passengercount WHERE tst > $1";
+
+  pool.query(query, [oneHourAgo.toISOString()], (err, res) => {
+    if (err) {
+      reportError(`Error while checking passengercount data: ${err.message}`);
+      return;
+    }
+
+    const count = res.rows[0].count;
+    if (count > 0) {
+      reportInfo(`Passengercount data is up to date. Records in the last hour: ${count}`);
+    } else {
+      reportError("No new passengercount data in the last hour.");
+    }
+  });
+};
+
 createScheduledImport("checkVehiclePositionData", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
-  checkRecentDataInVehiclePosition();
+  checkVehiclepositionData();
   onComplete();
 });
 
-
+createScheduledImport("checkApcData", HOURLY_TASK_SCHEDULE, async (onComplete = () => {}) => {
+  checkApcData();
+  onComplete();
+});
 
 export const server = () => {
   const app = express();
@@ -70,6 +93,8 @@ export const server = () => {
     console.log(`Server is listening on port 9000`);
   });
 };
+
 startScheduledImport("checkPartition");
 startScheduledImport("checkVehiclePositionData");
+startScheduledImport("checkApcData");
 server();
