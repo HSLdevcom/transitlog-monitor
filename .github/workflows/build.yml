@@ -1,0 +1,36 @@
+name: Build and publish Docker Hub dev image
+
+on: [push, pull_request]
+
+jobs:
+  build-dev:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+    steps:
+      - name: Checkout monitor
+        uses: actions/checkout@v3
+        with:
+          repository: HSLdevcom/transitlog-monitor
+          ref: dev
+      - name: Build monitor and publish Docker image
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: hsldevcom/transitlog-monitor
+          username: ${{ secrets.TRANSITLOG_DOCKERHUB_USER }}
+          password: ${{ secrets.TRANSITLOG_DOCKERHUB_TOKEN }}
+          tags: dev
+  build-release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout monitor
+        uses: actions/checkout@v3
+        with:
+          repository: HSLdevcom/transitlog-monitor
+      - name: Build monitor and publish Docker image
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: hsldevcom/transitlog-monitor
+          username: ${{ secrets.TRANSITLOG_DOCKERHUB_USER }}
+          password: ${{ secrets.TRANSITLOG_DOCKERHUB_TOKEN }}
+          tag_semver: true
