@@ -22,6 +22,8 @@ jobs:
           tags: dev
   build-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout monitor
