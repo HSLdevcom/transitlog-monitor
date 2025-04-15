@@ -5,6 +5,8 @@ on: [push, pull_request]
 jobs:
   build-dev:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout monitor
         uses: actions/checkout@v3
