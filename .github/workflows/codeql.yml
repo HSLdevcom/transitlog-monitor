@@ -1,7 +1,7 @@
 name: "Code analysis"
 on:
   push:
-    branches: [ "master", "dev" ]
+    branches: [ "master"]
   pull_request:
     branches: [ "master", "dev" ]
   schedule:
