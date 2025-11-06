@@ -8,7 +8,7 @@ import { createScheduledImport, startScheduledImport } from "./schedule";
 const pool = new Pool({
   user: POSTGRES_USER,
   host: POSTGRES_HOST,
-  dbname: POSTGRES_DB,
+  database: POSTGRES_DB,
   password: POSTGRES_PASSWORD,
   port: POSTGRES_PORT,
   ssl: true
