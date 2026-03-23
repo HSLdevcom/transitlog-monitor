@@ -1,6 +1,5 @@
 
 export const MONITOR_SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
-export const SLACK_MONITOR_MENTION = process.env.SLACK_MONITOR_MENTION || "";
 export const DAILY_TASK_SCHEDULE = process.env.DAILY_TASK_SCHEDULE || "0 0 12 * * *";
 export const HOURLY_TASK_SCHEDULE = process.env.HOURLY_TASK_SCHEDULE || "0 0 * * * *";
 
