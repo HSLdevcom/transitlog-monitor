@@ -1,4 +1,4 @@
-import { MONITOR_SLACK_WEBHOOK_URL, ENVIRONMENT, SLACK_MONITOR_MENTION } from "./constants";
+import { MONITOR_SLACK_WEBHOOK_URL, ENVIRONMENT } from "./constants";
 import fetch from "node-fetch";
 import _ from "lodash";
 export const messageTypes = {
@@ -25,10 +25,8 @@ export async function onMonitorEvent(
     return false;
   }
 
-  const userIds = SLACK_MONITOR_MENTION.split(",");
-
   const mentionUsers =
-    type === messageTypes.ERROR ? userIds.map((id) => `<@${id}> `) : "";
+    type === messageTypes.ERROR ? "@here " : "";
 
   const fullMessage = `${
     mentionUsers ? `${mentionUsers} ` : ""
