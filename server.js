@@ -15,7 +15,7 @@ const pool = new Pool({
 })
 
 const checkLastCronScheduledPartition = () => {
-  pool.query("SELECT * FROM cron.job_run_details ORDER BY runid DESC limit 10", (err, res) => {
+  pool.query("SELECT * FROM public.get_cron_job_run_details(10);", (err, res) => {
     const partmanMaintenanceRowIndex = findIndex(res.rows, (row) => { return row.command.includes('partman.run_maintenance'); })
     const partmanMaintenanceRow = res.rows[partmanMaintenanceRowIndex];
     if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
