@@ -1,5 +1,7 @@
 import { CronJob } from "cron";
-import { invoke } from "lodash";
+import lodash from "lodash";
+
+const { invoke } = lodash;
 
 const scheduledImports = {};
 const runningTasks = [];

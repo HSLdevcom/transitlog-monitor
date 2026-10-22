@@ -1,8 +1,10 @@
 import express from "express";
-import {Pool} from 'pg';
-import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
-import { reportInfo, reportError } from "./reporter";
-import { createScheduledImport, startScheduledImport } from "./schedule";
+import pg from "pg";
+import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants.js";
+import { reportInfo, reportError } from "./reporter.js";
+import { createScheduledImport, startScheduledImport } from "./schedule.js";
+
+const { Pool } = pg;
 
 const pool = new Pool({
   user: POSTGRES_USER,
