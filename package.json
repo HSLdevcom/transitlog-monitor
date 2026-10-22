@@ -31,6 +31,10 @@
   },
   "resolutions": {
     "minimist" : "^1.2.6",
-    "@babel/traverse": "^7.23.2"
+    "@babel/traverse": "^7.23.2",
+    "proxy-addr": "^2.0.8"
+  },
+  "overrides": {
+    "proxy-addr": "^2.0.8"
   }
 }
