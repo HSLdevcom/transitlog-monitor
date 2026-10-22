@@ -1,4 +1,4 @@
-import { MONITOR_SLACK_WEBHOOK_URL, ENVIRONMENT } from "./constants";
+import { MONITOR_SLACK_WEBHOOK_URL, ENVIRONMENT } from "./constants.js";
 import fetch from "node-fetch";
 import _ from "lodash";
 export const messageTypes = {
