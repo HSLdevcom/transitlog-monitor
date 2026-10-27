@@ -2,10 +2,15 @@
   "name": "transitlog-monitor",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "node -r dotenv/config ./server.js"
+    "start": "node -r dotenv/config ./src/server.js",
+    "test": "node --test",
+    "check-and-build": "node --check src/constants.js && node --check src/reporter.js && node --check src/schedule.js && node --check src/server.js && npm test"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "author": "",
   "license": "ISC",
