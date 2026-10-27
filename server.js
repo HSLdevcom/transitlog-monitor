@@ -1,9 +1,10 @@
 import express from "express";
-import {Pool} from 'pg';
-import { findIndex } from "lodash";
-import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants";
-import { reportInfo, reportError } from "./reporter";
-import { createScheduledImport, startScheduledImport } from "./schedule";
+import pg from "pg";
+import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants.js";
+import { reportInfo, reportError } from "./reporter.js";
+import { createScheduledImport, startScheduledImport } from "./schedule.js";
+
+const { Pool } = pg;
 
 const pool = new Pool({
   user: POSTGRES_USER,
@@ -14,17 +15,53 @@ const pool = new Pool({
   ssl: true
 })
 
+const partitionMaintenanceTables = [
+  "lightpriorityevent",
+  "passengercount",
+  "stopevent",
+  "unsignedevent",
+  "vehicleposition",
+  "otherevent",
+];
+
 const checkLastCronScheduledPartition = () => {
   pool.query("SELECT * FROM public.get_cron_job_run_details(10);", (err, res) => {
-    const partmanMaintenanceRowIndex = findIndex(res.rows, (row) => { return row.command.includes('partman.run_maintenance'); })
-    const partmanMaintenanceRow = res.rows[partmanMaintenanceRowIndex];
-    if (partmanMaintenanceRow && partmanMaintenanceRow.status === 'succeeded') {
-      reportInfo(`Partition maintenance successfully ended at ${partmanMaintenanceRow.end_time} `)
+    if (err) {
+      reportError(`Error while checking partition maintenance logs: ${err.message}`);
+      return;
+    }
+
+    const results = partitionMaintenanceTables.map((table) => {
+      const maintenanceRow = res.rows.find((row) => {
+        return row.command && row.command.includes(`public.${table}`);
+      });
+
+      if (!maintenanceRow) {
+        return {
+          succeeded: false,
+          message: `public.${table}: no run found in the latest 10 cron job runs.`,
+        };
+      }
+
+      if (maintenanceRow.status === "succeeded") {
+        return {
+          succeeded: true,
+          message: `public.${table}: succeeded at ${maintenanceRow.end_time}.`,
+        };
+      }
+
+      const returnMessage = maintenanceRow.return_message || "No message.";
+      return {
+        succeeded: false,
+        message: `public.${table}: failed. Return message: ${returnMessage}`,
+      };
+    });
+
+    const message = `Partition maintenance results:\n${results.map((result) => result.message).join("\n")}`;
+    if (results.every((result) => result.succeeded)) {
+      reportInfo(message);
     } else {
-      const returnMessage = partmanMaintenanceRow.return_message ? partmanMaintenanceRow.return_message : 'No message.';
-      const message = `Partition maintenance failed. Return message:\n
-      ${returnMessage}`;
-      reportError(message)
+      reportError(message);
     }
   })
 }
