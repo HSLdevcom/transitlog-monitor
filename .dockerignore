@@ -1,0 +1,9 @@
+**
+!package.json
+!package-lock.json
+!constants.js
+!reporter.js
+!schedule.js
+!server.js
+!.env.dev
+!.env.production

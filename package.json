@@ -4,8 +4,13 @@
   "description": "",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "node -r dotenv/config ./server.js"
+    "start": "node -r dotenv/config ./server.js",
+    "test": "node --check constants.js && node --check reporter.js && node --check schedule.js && node --check server.js",
+    "check-and-build": "npm test"
   },
   "author": "",
   "license": "ISC",

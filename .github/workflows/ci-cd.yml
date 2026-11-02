@@ -1,0 +1,20 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  ci-cd:
+    uses: HSLdevcom/transitdata-shared-workflows/.github/workflows/ci-cd-typescript.yml@88b8c3acf5bcfaa58acaa0e59c20f56ac74350eb
+    with:
+      checkAndTestOutsideDocker: true
+      checkAndTestInsideDocker: false
+    secrets: inherit
