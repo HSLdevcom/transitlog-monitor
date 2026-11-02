@@ -8,6 +8,7 @@ RUN npm ci
 ARG BUILD_ENV=production
 COPY .env.${BUILD_ENV} .env.production
 COPY constants.js reporter.js schedule.js server.js ./
+COPY test ./test
 RUN npm test && npm prune --omit=dev
 
 FROM hsldevcom/infodevops-docker-base-images:22-node-edge AS production

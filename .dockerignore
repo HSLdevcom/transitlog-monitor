@@ -5,5 +5,7 @@
 !reporter.js
 !schedule.js
 !server.js
+!test/
+!test/**
 !.env.dev
 !.env.production
