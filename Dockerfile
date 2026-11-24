@@ -7,7 +7,7 @@ RUN npm ci
 
 ARG BUILD_ENV=production
 COPY .env.${BUILD_ENV} .env.production
-COPY constants.js reporter.js schedule.js server.js ./
+COPY constants.js reporter.js schedule.js server.js blob-storage-metrics.js ./
 COPY test ./test
 RUN npm test && npm prune --omit=dev
 
@@ -24,5 +24,6 @@ COPY --from=build /opt/transitlog-monitor/constants.js ./constants.js
 COPY --from=build /opt/transitlog-monitor/reporter.js ./reporter.js
 COPY --from=build /opt/transitlog-monitor/schedule.js ./schedule.js
 COPY --from=build /opt/transitlog-monitor/server.js ./server.js
+COPY --from=build /opt/transitlog-monitor/blob-storage-metrics.js ./blob-storage-metrics.js
 
 CMD ["npm", "start"]

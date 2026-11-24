@@ -10,3 +10,7 @@ export const POSTGRES_PORT = process.env.POSTGRES_PORT || "";
 export const POSTGRES_USER = process.env.POSTGRES_USER || "";
 export const POSTGRES_PASSWORD = process.env.POSTGRES_PASSWORD || "";
 export const POSTGRES_DB = process.env.POSTGRES_DB || "";
+
+export const AZURE_STORAGE_ACCOUNT_NAME = process.env.AZURE_STORAGE_ACCOUNT_NAME || "";
+export const AZURE_BLOB_CONTAINER_NAME = process.env.AZURE_BLOB_CONTAINER_NAME || "";
+export const BLOB_STORAGE_METRICS_REFRESH_SCHEDULE = process.env.BLOB_STORAGE_METRICS_REFRESH_SCHEDULE || "0 0 * * * *";
