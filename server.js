@@ -2,7 +2,7 @@ import express from "express";
 import pg from "pg";
 import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, BLOB_STORAGE_METRICS_REFRESH_SCHEDULE } from "./constants.js";
 import { reportInfo, reportError } from "./reporter.js";
-import { createScheduledImport, runScheduledImportNow, startScheduledImport } from "./schedule.js";
+import { createScheduledImport, startScheduledImport } from "./schedule.js";
 import { refreshBlobStorageMetrics } from "./blob-storage-metrics.js";
 
 const { Pool } = pg;
@@ -200,5 +200,4 @@ startScheduledImport("checkPartition");
 startScheduledImport("checkVehiclePositionData");
 startScheduledImport("checkApcData");
 startScheduledImport("refreshBlobStorageMetrics");
-runScheduledImportNow("refreshBlobStorageMetrics");
 server();
