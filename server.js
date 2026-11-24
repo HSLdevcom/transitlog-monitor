@@ -1,8 +1,9 @@
 import express from "express";
 import pg from "pg";
-import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB} from "./constants.js";
+import { HOURLY_TASK_SCHEDULE, DAILY_TASK_SCHEDULE, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, BLOB_STORAGE_METRICS_REFRESH_SCHEDULE } from "./constants.js";
 import { reportInfo, reportError } from "./reporter.js";
 import { createScheduledImport, startScheduledImport } from "./schedule.js";
+import { refreshBlobStorageMetrics } from "./blob-storage-metrics.js";
 
 const { Pool } = pg;
 
@@ -171,6 +172,22 @@ createScheduledImport("checkApcData", HOURLY_TASK_SCHEDULE, async (onComplete = 
   onComplete();
 });
 
+createScheduledImport("refreshBlobStorageMetrics", BLOB_STORAGE_METRICS_REFRESH_SCHEDULE, async (onComplete = () => {}) => {
+  try {
+    await refreshBlobStorageMetrics();
+  } catch (error) {
+    const message = `Error refreshing blob storage metrics: ${error.message}`;
+    console.error(message);
+    try {
+      await reportError(message);
+    } catch (reportingError) {
+      console.error(`Error reporting blob storage metrics failure: ${reportingError.message}`);
+    }
+  } finally {
+    onComplete();
+  }
+});
+
 export const server = () => {
   const app = express();
   app.use(express.urlencoded({ extended: true }));
@@ -182,4 +199,5 @@ export const server = () => {
 startScheduledImport("checkPartition");
 startScheduledImport("checkVehiclePositionData");
 startScheduledImport("checkApcData");
+startScheduledImport("refreshBlobStorageMetrics");
 server();
