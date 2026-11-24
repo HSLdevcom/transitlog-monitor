@@ -5,6 +5,7 @@
 !reporter.js
 !schedule.js
 !server.js
+!blob-storage-metrics.js
 !test/
 !test/**
 !.env.dev
