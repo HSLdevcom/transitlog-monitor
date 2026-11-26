@@ -22,29 +22,37 @@ export async function collectBlobStorageMetrics(containerClient, database, now =
 
   for (const date of [yesterday, today]) {
     const dateStr = date.toISOString().slice(0, 10);
-    let csvCount = 0;
-    let totalBytes = 0;
+    const lastHour = date.getTime() === today.getTime() ? now.getUTCHours() : 23;
+    const counts = Array(lastHour + 1).fill(0);
+    const sizes = Array(lastHour + 1).fill(0);
 
     for await (const blob of containerClient.listBlobsFlat({ prefix: `${dateStr}T` })) {
       if (!blob.name.endsWith(".csv.zst")) continue;
+      const hourMatch = blob.name.slice(dateStr.length + 1).match(/^([01]\d|2[0-3])-/);
+      if (!hourMatch) {
+        throw new Error(`Invalid UTC hour in blob name ${blob.name}`);
+      }
+      const hour = Number(hourMatch[1]);
+      if (hour > lastHour) continue;
       const size = blob.properties.contentLength;
-      if (!Number.isSafeInteger(size) || size < 0 || !Number.isSafeInteger(totalBytes + size)) {
+      if (!Number.isSafeInteger(size) || size < 0 || !Number.isSafeInteger(sizes[hour] + size)) {
         throw new Error(`Invalid content length for blob ${blob.name}`);
       }
-      csvCount += 1;
-      totalBytes += size;
+      counts[hour] += 1;
+      sizes[hour] += size;
     }
 
+    const hours = counts.map((_, hour) => `${dateStr}T${String(hour).padStart(2, "0")}:00:00.000Z`);
     await database.query(
-      `INSERT INTO monitoring.blob_storage_metrics (metric_date, csv_file_count, total_size_bytes)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (metric_date) DO UPDATE SET
+      `INSERT INTO monitoring.blob_storage_hourly_metrics (metric_hour, csv_file_count, total_size_bytes)
+       SELECT * FROM unnest($1::timestamptz[], $2::integer[], $3::bigint[])
+       ON CONFLICT (metric_hour) DO UPDATE SET
          csv_file_count = EXCLUDED.csv_file_count,
          total_size_bytes = EXCLUDED.total_size_bytes,
          updated_at = CURRENT_TIMESTAMP`,
-      [dateStr, csvCount, totalBytes],
+      [hours, counts, sizes],
     );
-    console.log(`Blob storage metrics for ${dateStr}: ${csvCount} CSV files, ${totalBytes} bytes`);
+    console.log(`Blob storage hourly metrics refreshed for ${dateStr} through hour ${lastHour} UTC`);
   }
 }
 
